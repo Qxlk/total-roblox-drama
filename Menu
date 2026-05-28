@@ -4,7 +4,7 @@ local LP = game:GetService("Players").LocalPlayer
 local VK_F1 = 0x70
 
 
-local Win = UI:Window({ Title = "Idol ESP", Size = Vector2.new(400, 300), Open = true })
+local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 300), Open = true })
 
 task.spawn(function()
     local lastF1 = false

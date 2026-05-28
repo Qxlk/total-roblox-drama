@@ -4,7 +4,7 @@ local LP = game:GetService("Players").LocalPlayer
 local VK_F1 = 0x70
 
 
-local Win = UI:Window({ Title = "Total Roblox Drama Menu", Size = Vector2.new(400, 300), Open = true })
+local Win = UI:Window({ Title = "Idol ESP", Size = Vector2.new(400, 300), Open = true })
 
 task.spawn(function()
     local lastF1 = false
@@ -21,6 +21,11 @@ end)
 local MainTab = Win:Tab({ Title = "Main" })
 local ESPSection = MainTab:Section({ Title = "ESP", Collapsed = true })
 local TPSection = MainTab:Section({ Title = "Teleport", Collapsed = true })
+local CreditsTab = Win:Tab({ Title = "Credits" })
+local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
+
+CreditsSection:Label({ Title = "Script by @banmoimrc" })
+CreditsSection:Label({ Title = "UI by @zee7654" })
 
 local espEnabled = false
 local autoCollect = false
@@ -43,7 +48,6 @@ TPSection:Button({ Title = "TP to Finish" }, function()
     for _, v in pairs(workspace:GetDescendants()) do
         if v.Name == "Finish" then
             torso.CFrame = v.CFrame
-            print("[ESP] Teleporté au Finish")
             break
         end
     end
@@ -159,7 +163,7 @@ while true do
                 tracked[key] = true
                 local label = v.Name == "Bag" and "Bag" or "Statue"
                 local color = v.Name == "Bag" and COLORS.Bag or COLORS.SafetyStatue
-                print(string.format("[ESP] Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
+                print(string.format("Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
                 watchObject(v, label, color)
             end
         end

@@ -1,9 +1,10 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/zee-7654/UI/refs/heads/main/UI.lua"))()
 
 local LP = game:GetService("Players").LocalPlayer
-
-local Win = UI:Window({ Title = "Idol ESP", Size = Vector2.new(400, 300), Open = true })
 local VK_F1 = 0x70
+
+
+local Win = UI:Window({ Title = "Total Roblox Drama Menu", Size = Vector2.new(400, 300), Open = true })
 
 task.spawn(function()
     local lastF1 = false
@@ -146,19 +147,19 @@ while true do
         local hit = v:FindFirstChild("hit")
         if (v.Name == "Bag" or v.Name == "SafetyStatue") and hit then
             local key = v.Name .. "_" .. tostring(hit.Position.X):sub(1, 6)
+
+            if autoCollect then
+                local torso = getTorso()
+                if torso then
+                    torso.CFrame = hit.CFrame
+                end
+            end
+
             if not tracked[key] then
                 tracked[key] = true
                 local label = v.Name == "Bag" and "Bag" or "Statue"
                 local color = v.Name == "Bag" and COLORS.Bag or COLORS.SafetyStatue
-                print(string.format("Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
-
-                if autoCollect then
-                    local torso = getTorso()
-                    if torso then
-                        torso.CFrame = hit.CFrame
-                    end
-                end
-
+                print(string.format("[ESP] Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
                 watchObject(v, label, color)
             end
         end

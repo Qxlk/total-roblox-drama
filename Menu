@@ -3,7 +3,6 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/zee-7654/UI/refs/head
 local LP = game:GetService("Players").LocalPlayer
 local VK_F1 = 0x70
 
-
 local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 300), Open = true })
 
 task.spawn(function()
@@ -19,16 +18,17 @@ task.spawn(function()
 end)
 
 local MainTab = Win:Tab({ Title = "Main" })
+local CoinTab = Win:Tab({ Title = "Coin Hunt" })
+local CreditsTab = Win:Tab({ Title = "Credits" })
+
 local ESPSection = MainTab:Section({ Title = "ESP", Collapsed = true })
 local TPSection = MainTab:Section({ Title = "Teleport", Collapsed = true })
-local CreditsTab = Win:Tab({ Title = "Credits" })
+local CoinSection = CoinTab:Section({ Title = "Coin Hunt", Collapsed = true })
 local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
-
-CreditsSection:Label({ Title = "Script by @banmoimrc" })
-CreditsSection:Label({ Title = "UI by @zee7654" })
 
 local espEnabled = false
 local autoCollect = false
+local coinCollect = false
 
 ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
     espEnabled = val
@@ -48,11 +48,18 @@ TPSection:Button({ Title = "TP to Finish" }, function()
     for _, v in pairs(workspace:GetDescendants()) do
         if v.Name == "Finish" then
             torso.CFrame = v.CFrame
+            print("[ESP] Teleporté au Finish")
             break
         end
     end
 end)
 
+CoinSection:Checkbox({ Title = "Auto collect Coins & Gems", Default = false }, function(val)
+    coinCollect = val
+end)
+
+CreditsSection:Label({ Title = "Script by @banmoimrc" })
+CreditsSection:Label({ Title = "UI by @zee7654" })
 
 local COLORS = {
     Bag = Color3.fromRGB(255, 215, 0),
@@ -67,6 +74,63 @@ local function getTorso()
         or char:FindFirstChild("UpperTorso")
 end
 
+local function getPosition(v)
+    if v.ClassName == "Model" then
+        return v.PrimaryPart and v.PrimaryPart.Position or nil
+    end
+    return v.Position
+end
+
+-- Coin Hunt
+task.spawn(function()
+    local trackedCoins = {}
+    while true do
+        task.wait(1)
+        if not coinCollect then
+            trackedCoins = {}
+            continue
+        end
+
+        local assets = workspace:FindFirstChild("Assets")
+        if not assets then continue end
+
+        local coinHuntFolder = assets:FindFirstChild("Coin Hunt")
+        if not coinHuntFolder then continue end
+
+        local coinsFolder = coinHuntFolder:FindFirstChild("Coins")
+        if not coinsFolder then continue end
+
+        local torso = getTorso()
+        if not torso then continue end
+
+        local gems = {}
+        local coins = {}
+
+        for _, v in pairs(coinsFolder:GetChildren()) do
+            if v.Name == "Gem" then
+                table.insert(gems, v)
+            else
+                table.insert(coins, v)
+            end
+        end
+
+        local targets = #gems > 0 and gems or coins
+        local label = #gems > 0 and "Gem" or "Coin"
+
+        for _, v in pairs(targets) do
+            local pos = getPosition(v)
+            if not pos then continue end
+            local key = label .. "_" .. tostring(pos.X):sub(1, 8)
+            if not trackedCoins[key] then
+                trackedCoins[key] = true
+                torso.CFrame = CFrame.new(pos.X, pos.Y, pos.Z)
+                task.wait(0.2)
+            end
+        end
+    end
+end)
+
+-- ESP
 local function createESPOnce(instance, label, color)
     local hit = instance:FindFirstChild("hit")
     if not hit then return end
@@ -140,6 +204,7 @@ local function watchObject(instance, label, color)
     end)
 end
 
+-- Main
 local tracked = {}
 
 while true do

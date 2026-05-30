@@ -1,66 +1,10 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/zee-7654/UI/refs/heads/main/UI.lua"))()
 
 local LP = game:GetService("Players").LocalPlayer
-local VK_F1 = 0x70
+local VK_F1    = 0x70
+local VK_ENTER = 0x0D
 
-local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 300), Open = true })
-
-task.spawn(function()
-    local lastF1 = false
-    while true do
-        local f1Now = iskeypressed(VK_F1)
-        if f1Now and not lastF1 then
-            Win:Toggle()
-        end
-        lastF1 = f1Now
-        task.wait(0.05)
-    end
-end)
-
-local MainTab = Win:Tab({ Title = "Main" })
-local CoinTab = Win:Tab({ Title = "Coin Hunt" })
-local CreditsTab = Win:Tab({ Title = "Credits" })
-
-local ESPSection = MainTab:Section({ Title = "ESP", Collapsed = true })
-local TPSection = MainTab:Section({ Title = "Teleport", Collapsed = true })
-local CoinSection = CoinTab:Section({ Title = "Coin Hunt", Collapsed = true })
-local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
-
-local espEnabled = false
-local autoCollect = false
-local coinCollect = false
-
-ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
-    espEnabled = val
-end)
-
-TPSection:Checkbox({ Title = "Auto collect Bag & Statue", Default = false }, function(val)
-    autoCollect = val
-end)
-
-TPSection:Button({ Title = "TP to Finish" }, function()
-    local char = LP.Character
-    if not char then return end
-    local torso = char:FindFirstChild("HumanoidRootPart")
-        or char:FindFirstChild("Torso")
-        or char:FindFirstChild("UpperTorso")
-    if not torso then return end
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v.Name == "Finish" then
-            torso.CFrame = v.CFrame
-            print("[ESP] Teleporté au Finish")
-            break
-        end
-    end
-end)
-
-CoinSection:Checkbox({ Title = "Auto collect Coins & Gems", Default = false }, function(val)
-    coinCollect = val
-end)
-
-CreditsSection:Label({ Title = "Script by @banmoimrc" })
-CreditsSection:Label({ Title = "UI by @zee7654" })
-
+-- ==================== HELPERS ====================
 local COLORS = {
     Bag = Color3.fromRGB(255, 215, 0),
     SafetyStatue = Color3.fromRGB(0, 200, 255),
@@ -81,41 +25,139 @@ local function getPosition(v)
     return v.Position
 end
 
--- Coin Hunt
+-- ==================== UI ====================
+local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 400), Open = true })
+
+task.spawn(function()
+    local lastF1 = false
+    while true do
+        local f1Now = iskeypressed(VK_F1)
+        if f1Now and not lastF1 then Win:Toggle() end
+        lastF1 = f1Now
+        task.wait(0.05)
+    end
+end)
+
+local MainTab    = Win:Tab({ Title = "Main" })
+local ESPTab     = Win:Tab({ Title = "ESP" })
+local CreditsTab = Win:Tab({ Title = "Credits" })
+
+-- Main tab sections
+local TPSection     = MainTab:Section({ Title = "Teleport",   Collapsed = true })
+local CombatSection = MainTab:Section({ Title = "Combat",     Collapsed = true })
+local MiscSection   = MainTab:Section({ Title = "Misc",       Collapsed = true })
+
+-- ESP tab section
+local ESPSection = ESPTab:Section({ Title = "ESP", Collapsed = true })
+
+local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
+
+local espEnabled   = false
+local autoCollect  = false
+local coinCollect  = false
+local mathEnabled  = false
+local swordEnabled = false
+local currentQuestion = 1
+
+-- ==================== ESP TAB ====================
+ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
+    espEnabled = val
+end)
+
+-- ==================== MAIN TAB ====================
+
+-- Teleport
+TPSection:Checkbox({ Title = "Auto collect Bag & Statue", Default = false }, function(val)
+    autoCollect = val
+end)
+
+TPSection:Checkbox({ Title = "Auto Coins Hunt", Default = false }, function(val)
+    coinCollect = val
+end)
+
+TPSection:Label({ Title = "Auto Obby" })
+TPSection:Button({ Title = "TP to Finish" }, function()
+    local torso = getTorso()
+    if not torso then return end
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name == "Finish" then
+            torso.CFrame = v.CFrame
+            break
+        end
+    end
+end)
+
+TPSection:Label({ Title = "Block Push" })
+TPSection:Button({ Title = "Complete Block Push" }, function()
+    local blockpush = nil
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name == "Blockpush" then blockpush = v break end
+    end
+    if not blockpush then return end
+
+    local gold           = blockpush:FindFirstChild("Gold")
+    local pushableBlocks = blockpush:FindFirstChild("PushableBlocks")
+    if not gold or not pushableBlocks then return end
+
+    local targetPos = gold.Position
+    for _, v in pairs(pushableBlocks:GetDescendants()) do
+        if v.ClassName == "Part" or v.ClassName == "MeshPart" or v.ClassName == "UnionOperation" then
+            v.Position = targetPos
+        end
+    end
+    if pushableBlocks.PrimaryPart then
+        pushableBlocks:SetPrimaryPartCFrame(CFrame.new(targetPos.X, targetPos.Y, targetPos.Z))
+    end
+end)
+
+-- Combat
+local function getSword()
+    local playerFolder = workspace:FindFirstChild(LP.Name)
+    if not playerFolder then return nil end
+    local swordFolder = playerFolder:FindFirstChild("Sword")
+    if not swordFolder then return nil end
+    return swordFolder:FindFirstChild("Handle")
+end
+
+CombatSection:Checkbox({ Title = "Sword Fight Kill All", Default = false }, function(val)
+    swordEnabled = val
+end)
+
+-- Misc
+MiscSection:Checkbox({ Title = "Math Mania Answer", Default = false }, function(val)
+    mathEnabled = val
+    currentQuestion = 1
+end)
+
+-- Credits
+CreditsSection:Label({ Title = "Script by @banmoimrc" })
+CreditsSection:Label({ Title = "UI by @zee7654" })
+
+-- ==================== COIN HUNT ====================
 task.spawn(function()
     local trackedCoins = {}
     while true do
         task.wait(1)
-        if not coinCollect then
-            trackedCoins = {}
-            continue
-        end
+        if not coinCollect then trackedCoins = {} continue end
 
         local assets = workspace:FindFirstChild("Assets")
         if not assets then continue end
-
         local coinHuntFolder = assets:FindFirstChild("Coin Hunt")
         if not coinHuntFolder then continue end
-
         local coinsFolder = coinHuntFolder:FindFirstChild("Coins")
         if not coinsFolder then continue end
 
         local torso = getTorso()
         if not torso then continue end
 
-        local gems = {}
-        local coins = {}
-
+        local gems, coins = {}, {}
         for _, v in pairs(coinsFolder:GetChildren()) do
-            if v.Name == "Gem" then
-                table.insert(gems, v)
-            else
-                table.insert(coins, v)
-            end
+            if v.Name == "Gem" then table.insert(gems, v)
+            else table.insert(coins, v) end
         end
 
         local targets = #gems > 0 and gems or coins
-        local label = #gems > 0 and "Gem" or "Coin"
+        local label   = #gems > 0 and "Gem" or "Coin"
 
         for _, v in pairs(targets) do
             local pos = getPosition(v)
@@ -123,14 +165,140 @@ task.spawn(function()
             local key = label .. "_" .. tostring(pos.X):sub(1, 8)
             if not trackedCoins[key] then
                 trackedCoins[key] = true
-                torso.CFrame = CFrame.new(pos.X, pos.Y, pos.Z)
-                task.wait(0.2)
+                if v.ClassName == "Model" and v.PrimaryPart then
+                    v:SetPrimaryPartCFrame(torso.CFrame)
+                elseif v.ClassName ~= "Model" then
+                    v.CFrame = torso.CFrame
+                end
+                task.wait(0.1)
             end
         end
     end
 end)
 
--- ESP
+-- ==================== MATH MANIA ====================
+task.spawn(function()
+    local lastEnter = false
+    local firstShown = false
+    while true do
+        task.wait(0.05)
+        if not mathEnabled then
+            firstShown = false
+            continue
+        end
+
+        local assets = workspace:FindFirstChild("Assets")
+        if not assets then continue end
+        local mathFolder = assets:FindFirstChild("Math Mania")
+        if not mathFolder then continue end
+        local questionsFolder = mathFolder:FindFirstChild("Questions")
+        if not questionsFolder then continue end
+
+        local questionFolder = questionsFolder:FindFirstChild(tostring(currentQuestion))
+        if not questionFolder then
+            print("[Math] Plus de questions")
+            continue
+        end
+
+        local answerValue = questionFolder:FindFirstChild("answer")
+        if not answerValue then
+            print("[Math] 'answer' introuvable dans Q" .. currentQuestion)
+            continue
+        end
+
+        if not firstShown then
+            notify("Réponse: " .. tostring(answerValue.Value), "Math Mania - Q" .. currentQuestion, 5)
+            print("[Math] Q" .. currentQuestion .. " -> Réponse: " .. tostring(answerValue.Value))
+            currentQuestion += 1
+            firstShown = true
+            continue
+        end
+
+        local enterNow = iskeypressed(VK_ENTER)
+        if enterNow and not lastEnter then
+            local nextFolder = questionsFolder:FindFirstChild(tostring(currentQuestion))
+            if not nextFolder then
+                print("[Math] Plus de questions")
+                lastEnter = enterNow
+                continue
+            end
+            local nextAnswer = nextFolder:FindFirstChild("answer")
+            if nextAnswer then
+                notify("Réponse: " .. tostring(nextAnswer.Value), "Math Mania - Q" .. currentQuestion, 5)
+                print("[Math] Q" .. currentQuestion .. " -> Réponse: " .. tostring(nextAnswer.Value))
+                currentQuestion += 1
+            end
+        end
+        lastEnter = enterNow
+    end
+end)
+
+-- ==================== SWORD ====================
+task.spawn(function()
+    local killed = {}
+    while true do
+        task.wait(1)
+        if getSword() then break end
+    end
+
+    while true do
+        task.wait(0.1)
+        if not swordEnabled then continue end
+
+        local sword = getSword()
+        if not sword then
+            while true do
+                task.wait(1)
+                if getSword() then break end
+            end
+            continue
+        end
+
+        local target = nil
+        for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+            if player.Name == LP.Name then continue end
+            if killed[player.Name] then continue end
+            local char = player.Character
+            if not char then continue end
+            local hum = char:FindFirstChild("Humanoid")
+            if not hum or hum.Health <= 0 then continue end
+            local torsoTarget = char:FindFirstChild("HumanoidRootPart")
+                or char:FindFirstChild("Torso")
+                or char:FindFirstChild("UpperTorso")
+            if not torsoTarget then continue end
+            target = { player = player, hum = hum, torso = torsoTarget }
+            break
+        end
+
+        if not target then task.wait(2) continue end
+
+        local lastHp = target.hum.Health
+        while swordEnabled do
+            task.wait(0.05)
+            sword = getSword()
+            if not sword then break end
+
+            local char = target.player.Character
+            if not char then killed[target.player.Name] = true break end
+
+            local hum = char:FindFirstChild("Humanoid")
+            if not hum or hum.Health <= 0 then
+                killed[target.player.Name] = true
+                break
+            end
+
+            local torsoTarget = char:FindFirstChild("HumanoidRootPart")
+                or char:FindFirstChild("Torso")
+                or char:FindFirstChild("UpperTorso")
+            if not torsoTarget then continue end
+
+            lastHp = hum.Health
+            sword.CFrame = CFrame.new(torsoTarget.Position.X, torsoTarget.Position.Y, torsoTarget.Position.Z)
+        end
+    end
+end)
+
+-- ==================== ESP ====================
 local function createESPOnce(instance, label, color)
     local hit = instance:FindFirstChild("hit")
     if not hit then return end
@@ -162,29 +330,28 @@ local function createESPOnce(instance, label, color)
         if not hit then break end
 
         if espEnabled then
-            local top, on1 = WorldToScreen(hit.Position + Vector3.new(0, 2, 0))
+            local top, on1    = WorldToScreen(hit.Position + Vector3.new(0, 2, 0))
             local bottom, on2 = WorldToScreen(hit.Position - Vector3.new(0, 2, 0))
-
             if on1 and on2 then
                 local h = math.abs(top.Y - bottom.Y)
                 local w = h
-                box.Position = Vector2.new(top.X - w / 2, top.Y)
-                box.Size = Vector2.new(w, h)
+                box.Position     = Vector2.new(top.X - w / 2, top.Y)
+                box.Size         = Vector2.new(w, h)
                 outline.Position = Vector2.new(top.X - w / 2, top.Y)
-                outline.Size = Vector2.new(w, h)
-                text.Position = Vector2.new(top.X, top.Y - 16)
-                box.Visible = true
+                outline.Size     = Vector2.new(w, h)
+                text.Position    = Vector2.new(top.X, top.Y - 16)
+                box.Visible     = true
                 outline.Visible = true
-                text.Visible = true
+                text.Visible    = true
             else
-                box.Visible = false
+                box.Visible     = false
                 outline.Visible = false
-                text.Visible = false
+                text.Visible    = false
             end
         else
-            box.Visible = false
+            box.Visible     = false
             outline.Visible = false
-            text.Visible = false
+            text.Visible    = false
         end
 
         task.wait(0.05)
@@ -204,7 +371,7 @@ local function watchObject(instance, label, color)
     end)
 end
 
--- Main
+-- ==================== MAIN LOOP ====================
 local tracked = {}
 
 while true do
@@ -215,20 +382,18 @@ while true do
     for _, v in pairs(idols:GetDescendants()) do
         local hit = v:FindFirstChild("hit")
         if (v.Name == "Bag" or v.Name == "SafetyStatue") and hit then
-            local key = v.Name .. "_" .. tostring(hit.Position.X):sub(1, 6)
+            local key = v.Name .. "_" .. v:GetFullName()
 
             if autoCollect then
                 local torso = getTorso()
-                if torso then
-                    torso.CFrame = hit.CFrame
-                end
+                if torso then torso.CFrame = hit.CFrame end
             end
 
             if not tracked[key] then
                 tracked[key] = true
                 local label = v.Name == "Bag" and "Bag" or "Statue"
                 local color = v.Name == "Bag" and COLORS.Bag or COLORS.SafetyStatue
-                print(string.format("Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
+                print(string.format("[ESP] Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
                 watchObject(v, label, color)
             end
         end

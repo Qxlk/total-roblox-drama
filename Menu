@@ -4,7 +4,6 @@ local LP = game:GetService("Players").LocalPlayer
 local VK_F1    = 0x70
 local VK_ENTER = 0x0D
 
--- ==================== HELPERS ====================
 local COLORS = {
     Bag = Color3.fromRGB(255, 215, 0),
     SafetyStatue = Color3.fromRGB(0, 200, 255),
@@ -25,7 +24,7 @@ local function getPosition(v)
     return v.Position
 end
 
--- ==================== UI ====================
+--  UI 
 local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 400), Open = true })
 
 task.spawn(function()
@@ -41,15 +40,10 @@ end)
 local MainTab    = Win:Tab({ Title = "Main" })
 local ESPTab     = Win:Tab({ Title = "ESP" })
 local CreditsTab = Win:Tab({ Title = "Credits" })
-
--- Main tab sections
 local TPSection     = MainTab:Section({ Title = "Teleport",   Collapsed = true })
 local CombatSection = MainTab:Section({ Title = "Combat",     Collapsed = true })
 local MiscSection   = MainTab:Section({ Title = "Misc",       Collapsed = true })
-
--- ESP tab section
 local ESPSection = ESPTab:Section({ Title = "ESP", Collapsed = true })
-
 local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
 
 local espEnabled   = false
@@ -59,14 +53,10 @@ local mathEnabled  = false
 local swordEnabled = false
 local currentQuestion = 1
 
--- ==================== ESP TAB ====================
 ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
     espEnabled = val
 end)
 
--- ==================== MAIN TAB ====================
-
--- Teleport
 TPSection:Checkbox({ Title = "Auto collect Bag & Statue", Default = false }, function(val)
     autoCollect = val
 end)
@@ -110,7 +100,6 @@ TPSection:Button({ Title = "Complete Block Push" }, function()
     end
 end)
 
--- Combat
 local function getSword()
     local playerFolder = workspace:FindFirstChild(LP.Name)
     if not playerFolder then return nil end
@@ -123,17 +112,15 @@ CombatSection:Checkbox({ Title = "Sword Fight Kill All", Default = false }, func
     swordEnabled = val
 end)
 
--- Misc
 MiscSection:Checkbox({ Title = "Math Mania Answer", Default = false }, function(val)
     mathEnabled = val
     currentQuestion = 1
 end)
 
--- Credits
 CreditsSection:Label({ Title = "Script by @banmoimrc" })
 CreditsSection:Label({ Title = "UI by @zee7654" })
 
--- ==================== COIN HUNT ====================
+--  COIN HUNT 
 task.spawn(function()
     local trackedCoins = {}
     while true do
@@ -176,7 +163,7 @@ task.spawn(function()
     end
 end)
 
--- ==================== MATH MANIA ====================
+--  MATH MANIA 
 task.spawn(function()
     local lastEnter = false
     local firstShown = false
@@ -196,19 +183,17 @@ task.spawn(function()
 
         local questionFolder = questionsFolder:FindFirstChild(tostring(currentQuestion))
         if not questionFolder then
-            print("[Math] Plus de questions")
             continue
         end
 
         local answerValue = questionFolder:FindFirstChild("answer")
         if not answerValue then
-            print("[Math] 'answer' introuvable dans Q" .. currentQuestion)
             continue
         end
 
         if not firstShown then
-            notify("Réponse: " .. tostring(answerValue.Value), "Math Mania - Q" .. currentQuestion, 5)
-            print("[Math] Q" .. currentQuestion .. " -> Réponse: " .. tostring(answerValue.Value))
+            notify("Answer: " .. tostring(answerValue.Value), "Math Mania - Question" .. currentQuestion, 5)
+            print("Question" .. currentQuestion .. " -> Answer: " .. tostring(answerValue.Value))
             currentQuestion += 1
             firstShown = true
             continue
@@ -218,14 +203,13 @@ task.spawn(function()
         if enterNow and not lastEnter then
             local nextFolder = questionsFolder:FindFirstChild(tostring(currentQuestion))
             if not nextFolder then
-                print("[Math] Plus de questions")
                 lastEnter = enterNow
                 continue
             end
             local nextAnswer = nextFolder:FindFirstChild("answer")
             if nextAnswer then
-                notify("Réponse: " .. tostring(nextAnswer.Value), "Math Mania - Q" .. currentQuestion, 5)
-                print("[Math] Q" .. currentQuestion .. " -> Réponse: " .. tostring(nextAnswer.Value))
+                notify("Answer: " .. tostring(nextAnswer.Value), "Math Mania - Question" .. currentQuestion, 5)
+                print("Question" .. currentQuestion .. " -> Answer: " .. tostring(nextAnswer.Value))
                 currentQuestion += 1
             end
         end
@@ -233,7 +217,7 @@ task.spawn(function()
     end
 end)
 
--- ==================== SWORD ====================
+--  SWORD 
 task.spawn(function()
     local killed = {}
     while true do
@@ -298,7 +282,7 @@ task.spawn(function()
     end
 end)
 
--- ==================== ESP ====================
+-- ESP
 local function createESPOnce(instance, label, color)
     local hit = instance:FindFirstChild("hit")
     if not hit then return end
@@ -371,7 +355,7 @@ local function watchObject(instance, label, color)
     end)
 end
 
--- ==================== MAIN LOOP ====================
+--  MAIN LOOP 
 local tracked = {}
 
 while true do
@@ -393,7 +377,7 @@ while true do
                 tracked[key] = true
                 local label = v.Name == "Bag" and "Bag" or "Statue"
                 local color = v.Name == "Bag" and COLORS.Bag or COLORS.SafetyStatue
-                print(string.format("[ESP] Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
+                print(string.format("Found %s at: %.1f, %.1f, %.1f", label, hit.Position.X, hit.Position.Y, hit.Position.Z))
                 watchObject(v, label, color)
             end
         end

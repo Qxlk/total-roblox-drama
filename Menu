@@ -366,7 +366,7 @@ while true do
     for _, v in pairs(idols:GetDescendants()) do
         local hit = v:FindFirstChild("hit")
         if (v.Name == "Bag" or v.Name == "SafetyStatue") and hit then
-            local key = v.Name .. "_" .. v:GetFullName()
+            local key = v.Name .. "_" .. tostring(hit.Position.X):sub(1, 6)
 
             if autoCollect then
                 local torso = getTorso()

@@ -35,7 +35,7 @@ local function getSword()
 end
 
 -- UI
-local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 400), Open = true })
+local Win = UI:Window({ Title = "Total Roblox Drama Menu | @banmoimrc", Size = Vector2.new(400, 400), Open = true })
 
 task.spawn(function()
     local lastF1 = false
@@ -122,7 +122,7 @@ MiscSection:Checkbox({ Title = "Math Mania Answer", Default = false }, function(
     currentQuestion = 1
 end)
 
-local pancakeCheckbox = MiscSection:Checkbox({ Title = "Pancake Eating", Default = false }, function(val)
+local pancakeCheckbox = MiscSection:Checkbox({ Title = "Auto Eating Contest", Default = false }, function(val)
     pancakeEnabled = val
 end)
 

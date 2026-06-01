@@ -9,6 +9,8 @@ local COLORS = {
     SafetyStatue = Color3.fromRGB(0, 200, 255),
 }
 
+local mouse = LP:GetMouse()
+
 local function getTorso()
     local char = LP.Character
     if not char then return nil end
@@ -24,7 +26,15 @@ local function getPosition(v)
     return v.Position
 end
 
---  UI 
+local function getSword()
+    local playerFolder = workspace:FindFirstChild(LP.Name)
+    if not playerFolder then return nil end
+    local swordFolder = playerFolder:FindFirstChild("Sword")
+    if not swordFolder then return nil end
+    return swordFolder:FindFirstChild("Handle")
+end
+
+-- UI
 local Win = UI:Window({ Title = "Total Roblox Drama Menu by @banmoimrc", Size = Vector2.new(400, 400), Open = true })
 
 task.spawn(function()
@@ -40,18 +50,20 @@ end)
 local MainTab    = Win:Tab({ Title = "Main" })
 local ESPTab     = Win:Tab({ Title = "ESP" })
 local CreditsTab = Win:Tab({ Title = "Credits" })
-local TPSection     = MainTab:Section({ Title = "Teleport",   Collapsed = true })
-local CombatSection = MainTab:Section({ Title = "Combat",     Collapsed = true })
-local MiscSection   = MainTab:Section({ Title = "Misc",       Collapsed = true })
-local ESPSection = ESPTab:Section({ Title = "ESP", Collapsed = true })
+
+local TPSection      = MainTab:Section({ Title = "Teleport",   Collapsed = true })
+local CombatSection  = MainTab:Section({ Title = "Combat",     Collapsed = true })
+local MiscSection    = MainTab:Section({ Title = "Misc",       Collapsed = true })
+local ESPSection     = ESPTab:Section({ Title = "ESP",         Collapsed = true })
 local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
 
-local espEnabled   = false
-local autoCollect  = false
-local coinCollect  = false
-local mathEnabled  = false
-local swordEnabled = false
-local currentQuestion = 1
+local espEnabled       = false
+local autoCollect      = false
+local coinCollect      = false
+local mathEnabled      = false
+local pancakeEnabled   = false
+local swordEnabled     = false
+local currentQuestion  = 1
 
 ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
     espEnabled = val
@@ -100,27 +112,24 @@ TPSection:Button({ Title = "Complete Block Push" }, function()
     end
 end)
 
-local function getSword()
-    local playerFolder = workspace:FindFirstChild(LP.Name)
-    if not playerFolder then return nil end
-    local swordFolder = playerFolder:FindFirstChild("Sword")
-    if not swordFolder then return nil end
-    return swordFolder:FindFirstChild("Handle")
-end
-
 CombatSection:Checkbox({ Title = "Sword Fight Kill All", Default = false }, function(val)
     swordEnabled = val
 end)
+
 
 MiscSection:Checkbox({ Title = "Math Mania Answer", Default = false }, function(val)
     mathEnabled = val
     currentQuestion = 1
 end)
 
+local pancakeCheckbox = MiscSection:Checkbox({ Title = "Pancake Eating", Default = false }, function(val)
+    pancakeEnabled = val
+end)
+
 CreditsSection:Label({ Title = "Script by @banmoimrc" })
 CreditsSection:Label({ Title = "UI by @zee7654" })
 
---  COIN HUNT 
+-- COIN HUNT
 task.spawn(function()
     local trackedCoins = {}
     while true do
@@ -163,7 +172,7 @@ task.spawn(function()
     end
 end)
 
---  MATH MANIA 
+-- MATH MANIA
 task.spawn(function()
     local lastEnter = false
     local firstShown = false
@@ -182,14 +191,10 @@ task.spawn(function()
         if not questionsFolder then continue end
 
         local questionFolder = questionsFolder:FindFirstChild(tostring(currentQuestion))
-        if not questionFolder then
-            continue
-        end
+        if not questionFolder then continue end
 
         local answerValue = questionFolder:FindFirstChild("answer")
-        if not answerValue then
-            continue
-        end
+        if not answerValue then continue end
 
         if not firstShown then
             notify("Answer: " .. tostring(answerValue.Value), "Math Mania - Question" .. currentQuestion, 5)
@@ -217,7 +222,55 @@ task.spawn(function()
     end
 end)
 
---  SWORD 
+-- PANCAKE
+task.spawn(function()
+    while true do
+        task.wait(0.01)
+        if not pancakeEnabled then continue end
+
+        local assets = workspace:FindFirstChild("Assets")
+        if not assets then continue end
+        local pancakeEating = assets:FindFirstChild("Pancake Eating")
+        if not pancakeEating then continue end
+        local food = pancakeEating:FindFirstChild("Food")
+        if not food then continue end
+
+        local pancake = nil
+        for _, team in pairs(food:GetChildren()) do
+            for _, part in pairs(team:GetChildren()) do
+                if part.Name:lower() == LP.Name:lower() then
+                    pancake = part
+                    break
+                end
+            end
+            if pancake then break end
+        end
+
+        if not pancake then continue end
+
+        local torso = getTorso()
+        if not torso then continue end
+
+        local look = torso.CFrame.LookVector
+        local offset = 3
+        torso.CFrame = CFrame.new(
+            pancake.Position.X - look.X * offset,
+            pancake.Position.Y,
+            pancake.Position.Z - look.Z * offset
+        ) * CFrame.Angles(0, math.atan2(-look.X, -look.Z), 0)
+
+        local screenPos, onScreen = WorldToScreen(pancake.Position)
+        if not onScreen then continue end
+
+        local dx = screenPos.X - mouse.X
+        local dy = screenPos.Y - mouse.Y
+        mousemoverel(dx, dy)
+        mouse1press()
+        mouse1release()
+    end
+end)
+
+-- SWORD
 task.spawn(function()
     local killed = {}
     while true do
@@ -355,7 +408,7 @@ local function watchObject(instance, label, color)
     end)
 end
 
---  MAIN LOOP 
+-- MAIN LOOP
 local tracked = {}
 
 while true do

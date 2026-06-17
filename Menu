@@ -34,8 +34,18 @@ local function getSword()
     return swordFolder:FindFirstChild("Handle")
 end
 
+local function getWhisperParticipants(channel)
+    local names = {}
+    local chanName = channel.Name
+    local pair = chanName:sub(12)
+    for name in pair:gmatch("[^_]+") do
+        table.insert(names, name)
+    end
+    return names
+end
+
 -- UI
-local Win = UI:Window({ Title = "Total Roblox Drama Menu | @banmoimrc", Size = Vector2.new(400, 400), Open = true })
+local Win = UI:Window({ Title = "Total Roblox Drama Menu | @banmoimrc", Size = Vector2.new(400, 500), Open = true })
 
 task.spawn(function()
     local lastF1 = false
@@ -49,12 +59,14 @@ end)
 
 local MainTab    = Win:Tab({ Title = "Main" })
 local ESPTab     = Win:Tab({ Title = "ESP" })
+local SocialTab  = Win:Tab({ Title = "Social" })
 local CreditsTab = Win:Tab({ Title = "Credits" })
 
 local TPSection      = MainTab:Section({ Title = "Teleport",   Collapsed = true })
 local CombatSection  = MainTab:Section({ Title = "Combat",     Collapsed = true })
 local MiscSection    = MainTab:Section({ Title = "Misc",       Collapsed = true })
 local ESPSection     = ESPTab:Section({ Title = "ESP",         Collapsed = true })
+local SocialSection  = SocialTab:Section({ Title = "Notifications", Collapsed = true })
 local CreditsSection = CreditsTab:Section({ Title = "Credits", Collapsed = true })
 
 local espEnabled       = false
@@ -63,6 +75,8 @@ local coinCollect      = false
 local mathEnabled      = false
 local pancakeEnabled   = false
 local swordEnabled     = false
+local voteNotifyEnabled   = false
+local whisperNotifyEnabled = false
 local currentQuestion  = 1
 
 ESPSection:Checkbox({ Title = "Bag & Statue ESP", Default = false }, function(val)
@@ -116,7 +130,6 @@ CombatSection:Checkbox({ Title = "Sword Fight Kill All", Default = false }, func
     swordEnabled = val
 end)
 
-
 MiscSection:Checkbox({ Title = "Math Mania Answer", Default = false }, function(val)
     mathEnabled = val
     currentQuestion = 1
@@ -125,6 +138,16 @@ end)
 local pancakeCheckbox = MiscSection:Checkbox({ Title = "Auto Eating Contest", Default = false }, function(val)
     pancakeEnabled = val
 end)
+
+SocialSection:Checkbox({ Title = "Vote Notifications", Default = false }, function(val)
+    voteNotifyEnabled = val
+end)
+
+SocialSection:Checkbox({ Title = "Whisper Notifications", Default = false }, function(val)
+    whisperNotifyEnabled = val
+end)
+
+SocialSection:Label({ Title = "Credits: @rubysadult" })
 
 CreditsSection:Label({ Title = "Script by @banmoimrc" })
 CreditsSection:Label({ Title = "UI by @zee7654" })
@@ -331,6 +354,92 @@ task.spawn(function()
 
             lastHp = hum.Health
             sword.CFrame = CFrame.new(torsoTarget.Position.X, torsoTarget.Position.Y, torsoTarget.Position.Z)
+        end
+    end
+end)
+
+-- VOTE
+task.spawn(function()
+    local knownVotes       = {}
+    local lastNotifiedRound = 0
+    while true do
+        task.wait(1)
+        if not voteNotifyEnabled then continue end
+
+        local ok, votingPlayers = pcall(function()
+            return game.ReplicatedStorage.Season.Voting.Players
+        end)
+        if not ok or not votingPlayers then continue end
+
+        for _, playerFolder in ipairs(votingPlayers:GetChildren()) do
+            local ok2, store = pcall(function()
+                return game.Workspace.Chart.ChartGui.Store.Players
+            end)
+            if not ok2 or not store then continue end
+
+            local fullFolder = store:FindFirstChild(playerFolder.Name)
+            if not fullFolder then continue end
+
+            local votesFolder = fullFolder:FindFirstChild("Votes")
+            if not votesFolder or not votesFolder:IsA("Folder") then continue end
+
+            local highestRound, highestVal = nil, nil
+            for _, voteValue in ipairs(votesFolder:GetChildren()) do
+                if not voteValue:IsA("StringValue") then continue end
+                local roundNum = tonumber(voteValue.Name)
+                if not roundNum then continue end
+                local valStr = tostring(voteValue.Value or "")
+                if valStr == "" or valStr == "-" or valStr:lower() == "safe" then continue end
+                if not highestRound or roundNum > highestRound then
+                    highestRound = roundNum
+                    highestVal   = valStr
+                end
+            end
+
+            if highestRound and highestRound > lastNotifiedRound then
+                local key = playerFolder.Name
+                if knownVotes[key] ~= highestVal then
+                    knownVotes[key] = highestVal
+                    notify(playerFolder.Name, "Round " .. highestRound .. ": voted " .. highestVal, 16)
+                    print(playerFolder.Name .. " voted " .. highestVal .. " (Round " .. highestRound .. ")")
+                end
+            end
+        end
+    end
+end)
+
+-- WHISPER
+task.spawn(function()
+    local knownWhispers = {}
+    while true do
+        task.wait(1)
+        if not whisperNotifyEnabled then continue end
+
+        local ok, textChannels = pcall(function()
+            return game.TextChatService.TextChannels
+        end)
+        if not ok or not textChannels then continue end
+
+        local activeKeys = {}
+        for _, channel in ipairs(textChannels:GetChildren()) do
+            local okName, chanName = pcall(function() return channel.Name end)
+            if not okName or not chanName then continue end
+
+            if chanName:sub(1, 11) == "RBXWhisper:" then
+                activeKeys[chanName] = true
+                if not knownWhispers[chanName] then
+                    knownWhispers[chanName] = true
+                    local names = getWhisperParticipants(channel)
+                    local label = #names >= 2
+                        and (names[1] .. " <-> " .. names[2])
+                        or chanName:sub(12)
+                    notify("Whisper Started", label, 10)
+                    print("[Whisper] " .. label)
+                end
+            end
+        end
+        for key in pairs(knownWhispers) do
+            if not activeKeys[key] then knownWhispers[key] = nil end
         end
     end
 end)

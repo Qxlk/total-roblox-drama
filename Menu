@@ -68,7 +68,7 @@ local function getPrivateChannelPartner(channel, ownerName)
 end
 
 -- UI
-local Win = UI:Window({ Title = "Total Roblox Drama Menu | @banmoimrc", Size = Vector2.new(400, 500), Open = true })
+local Win = UI:Window({ Title = "Total Roblox Drama Menu | @xban11", Size = Vector2.new(400, 500), Open = true })
 
 task.spawn(function()
     local lastF1 = false
@@ -172,7 +172,7 @@ end)
 
 SocialSection:Label({ Title = "Credits: @rubysadult" })
 
-CreditsSection:Label({ Title = "Script by @banmoimrc" })
+CreditsSection:Label({ Title = "Script by @xban11" })
 CreditsSection:Label({ Title = "UI by @zee7654" })
 
 -- COIN HUNT

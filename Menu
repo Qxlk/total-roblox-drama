@@ -36,12 +36,35 @@ end
 
 local function getWhisperParticipants(channel)
     local names = {}
-    local chanName = channel.Name
-    local pair = chanName:sub(12)
-    for name in pair:gmatch("[^_]+") do
-        table.insert(names, name)
+    local ok, children = pcall(function() return channel:GetChildren() end)
+    if not ok or not children then return names end
+
+    for _, src in ipairs(children) do
+        local okIsSrc, isSrc = pcall(function() return src:IsA("TextSource") end)
+        if okIsSrc and isSrc then
+            local okName, name = pcall(function() return src.Name end)
+            if okName and name then
+                table.insert(names, name)
+            end
+        end
     end
     return names
+end
+
+local function getPrivateChannelPartner(channel, ownerName)
+    local ok, children = pcall(function() return channel:GetChildren() end)
+    if not ok or not children then return nil end
+
+    for _, src in ipairs(children) do
+        local okIsSrc, isSrc = pcall(function() return src:IsA("TextSource") end)
+        if okIsSrc and isSrc then
+            local okName, name = pcall(function() return src.Name end)
+            if okName and name and name ~= ownerName then
+                return name
+            end
+        end
+    end
+    return nil
 end
 
 -- UI
@@ -420,8 +443,11 @@ task.spawn(function()
         end)
         if not ok or not textChannels then continue end
 
+        local okChildren, channels = pcall(function() return textChannels:GetChildren() end)
+        if not okChildren or not channels then continue end
+
         local activeKeys = {}
-        for _, channel in ipairs(textChannels:GetChildren()) do
+        for _, channel in ipairs(channels) do
             local okName, chanName = pcall(function() return channel.Name end)
             if not okName or not chanName then continue end
 
@@ -430,9 +456,14 @@ task.spawn(function()
                 if not knownWhispers[chanName] then
                     knownWhispers[chanName] = true
                     local names = getWhisperParticipants(channel)
-                    local label = #names >= 2
-                        and (names[1] .. " <-> " .. names[2])
-                        or chanName:sub(12)
+                    local label
+                    if #names >= 2 then
+                        label = names[1] .. " <-> " .. names[2]
+                    elseif #names == 1 then
+                        label = names[1] .. " <-> ?"
+                    else
+                        label = "Unknown pair"
+                    end
                     notify("Whisper Started", label, 10)
                     print("[Whisper] " .. label)
                 end
@@ -440,6 +471,46 @@ task.spawn(function()
         end
         for key in pairs(knownWhispers) do
             if not activeKeys[key] then knownWhispers[key] = nil end
+        end
+    end
+end)
+
+-- PRIVATE CHANNELS
+task.spawn(function()
+    local knownPrivateChannels = {}
+    while true do
+        task.wait(1)
+        if not whisperNotifyEnabled then continue end
+
+        local ok, privateChannels = pcall(function()
+            return game.TextChatService.PrivateChannels
+        end)
+        if not ok or not privateChannels then continue end
+
+        local okChildren, channels = pcall(function() return privateChannels:GetChildren() end)
+        if not okChildren or not channels then continue end
+
+        local activeKeys = {}
+        for _, channel in ipairs(channels) do
+            local okName, chanName = pcall(function() return channel.Name end)
+            if not okName or not chanName then continue end
+
+            activeKeys[chanName] = true
+            if not knownPrivateChannels[chanName] then
+                knownPrivateChannels[chanName] = true
+                local partner = getPrivateChannelPartner(channel, chanName)
+                local label
+                if partner then
+                    label = chanName .. " <-> " .. partner
+                else
+                    label = chanName .. " <-> ?"
+                end
+                notify("Private Chat Started", label, 10)
+                print("[PrivateChannel] " .. label)
+            end
+        end
+        for key in pairs(knownPrivateChannels) do
+            if not activeKeys[key] then knownPrivateChannels[key] = nil end
         end
     end
 end)
